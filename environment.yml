@@ -1,0 +1,22 @@
+  
+name: env-name-here-does-not-matter
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - python =3.8
+  - pip
+  - diamond
+  - blast
+  - biopython
+  - prodigal =2.6.3
+  - parallel=20190722
+  - muscle=3.8.1551
+  - hmmer=3.2.1
+  - reportlab
+  - numpy
+  - pandas
+  - plotly
+  - paml
+  - pal2nal
