@@ -314,6 +314,15 @@ def fasta(fasta_file):
     return Dict
 
 
+def allButTheLast(iterable, delim):
+    x = ''
+    length = len(iterable.split(delim))
+    for i in range(0, length - 1):
+        x += iterable.split(delim)[i]
+        x += delim
+    return x[0:len(x) - 1]
+
+
 def fasta2(fasta_file):
     count = 0
     seq = ''

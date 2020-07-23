@@ -76,6 +76,15 @@ def current_time() -> str:
     return str(strftime("%Y-%m-%d %H:%M:%S", localtime()))
 
 
+def allButTheLast(iterable, delim):
+    x = ''
+    length = len(iterable.split(delim))
+    for i in range(0, length - 1):
+        x += iterable.split(delim)[i]
+        x += delim
+    return x[0:len(x) - 1]
+
+
 def get_args():
     parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
                                      usage='\033[1m'+"[pseudofinder.py annotate -g GENOME -db DATABASE -op OUTPREFIX] or "
