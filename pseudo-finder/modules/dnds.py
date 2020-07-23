@@ -434,13 +434,27 @@ def main():
         os.system("rm ctl.txt")
 
         if not re.findall(r'codeml', ctl):
-            if args.ctl == "NA":
+            os.system("which pseudofinder.py > mainDir.txt")
+            file = open("mainDir.txt")
+            for i in file:
+                location = i.rstrip()
+            location = allButTheLast(location, "/")
+            ctl = location + "/" + "codeml-2.ctl"
+
+            if not re.findall(r'codeml', ctl):
                 print("\nCannot locate the necessary \ncodeml control file. Please double check that "
                       "installation\n with the \'setup.sh\' script worked without any errors. If issues \npersist, please "
                       "report an issue on GitHub\n")
                 raise SystemExit
+
             else:
-                ctl = args.ctl
+                if args.ctl == "NA":
+                    print("\nCannot locate the necessary \ncodeml control file. Please double check that "
+                          "installation\n with the \'setup.sh\' script worked without any errors. If issues \npersist, please "
+                          "report an issue on GitHub\n")
+                    raise SystemExit
+                else:
+                    ctl = args.ctl
 
         faa = args.a
         fna = args.n
@@ -603,6 +617,10 @@ def main():
             ls = line.split("  ")
             dS = remove(lastItem(ls), [" ", "=", "d", "S"])
             dN = remove(lastItem(ls[0:len(ls) - 1]), [" ", "=", "d", "N"])
+            print(orf)
+            print(dN)
+            print(dS)
+            print("")
             dndsDict[NODE]["orf"] = orf
             dndsDict[NODE]["dn"] = dN
             dndsDict[NODE]["ds"] = dS
@@ -679,21 +697,33 @@ def full(skip: bool, ref: str, nucOrfs: str, pepORFs: str, referenceNucOrfs: str
     cwd = os.getcwd()
 
     if skip == False:
-        os.system("echo ${ctl} > ctl.txt")
-        file = open("ctl.txt")
-        for i in file:
-            ctl = (i.rstrip())
-            ctl = ctl[0:len(ctl)]
-        os.system("rm ctl.txt")
 
-        if not re.findall(r'codeml', ctl):
-            if not c:
-                print("\nCannot locate the necessary \ncodeml control file. Please double check that "
-                      "installation\n with the \'setup.sh\' script worked without any errors. If issues \npersist, please "
-                      "report an issue on GitHub\n")
-                raise SystemExit
-            else:
-                ctl = c
+        if not c:
+            os.system("echo ${ctl} > ctl.txt")
+            file = open("ctl.txt")
+            for i in file:
+                ctl = (i.rstrip())
+                ctl = ctl[0:len(ctl)]
+            os.system("rm ctl.txt")
+
+            if not re.findall(r'codeml', ctl):
+
+                os.system("which pseudofinder.py > mainDir.txt")
+                file = open("mainDir.txt")
+                for i in file:
+                    location = i.rstrip()
+
+                location = allButTheLast(location, "/")
+                ctl = location + "/" + "codeml-2.ctl"
+
+                if not re.findall(r'codeml', ctl):
+                    print("\nCannot locate the necessary \ncodeml control file. Please double check that "
+                          "installation\n with the \'setup.sh\' script worked without any errors. If issues \npersist, please "
+                          "report an issue on GitHub\n")
+                    raise SystemExit
+
+        else:
+            ctl = c
 
         faa = pepORFs
         fna = nucOrfs
