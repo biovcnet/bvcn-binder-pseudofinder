@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
 from collections import defaultdict
+from . import common
 import re
 import os
-import textwrap
-import argparse
 import numpy as np
 import sys
 
@@ -314,15 +313,6 @@ def fasta(fasta_file):
     return Dict
 
 
-def allButTheLast(iterable, delim):
-    x = ''
-    length = len(iterable.split(delim))
-    for i in range(0, length - 1):
-        x += iterable.split(delim)[i]
-        x += delim
-    return x[0:len(x) - 1]
-
-
 def fasta2(fasta_file):
     count = 0
     seq = ''
@@ -393,78 +383,10 @@ def delim(line):
 
 
 def main():
-    parser = argparse.ArgumentParser(
-        prog="dnds.py",
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        description=textwrap.dedent('''
-        ************************************************************************
-    
-        Developed by Arkadiy Garber and John McCutcheon
-        University of Montana, Biological Sciences
-        Please send comments and inquiries to arkadiy.garber@mso.umt.edu
-    
-        ************************************************************************
-        '''))
-
-    parser.add_argument('-n', type=str, help="ORFs in nucleic acid format", default="NA")
-    parser.add_argument('-a', type=str, help="ORFs in amino acid format", default="NA")
-    parser.add_argument('-rn', type=str, help="Reference ORFs in nucleic acid format", default="NA")
-    parser.add_argument('-ra', type=str, help="Reference ORFs in amino acid format", default="NA")
-    parser.add_argument('-r', type=str, help="Reference contigs (provide this if you do not have ORFs for the reference genome)",
-                        default="NA")
-
-    parser.add_argument('-ctl', type=str, help="template control file for codeml", default="NA")
-
-    parser.add_argument('-out', type=str, help="name output directory", default="PseudoHunter_output")
-
-    parser.add_argument('-d', type=float, help="maximum dN/dS value for gene too be considered \'intact\' (default = 0.3)",
-                        default=0.3)
-    parser.add_argument('-M', type=float, help="maximum dS value for dN/dS calculation (default = 3)", default=3)
-    parser.add_argument('-m', type=float, help="minimum dS value for dN/dS calculation (default = 0.001)", default=0.001)
-    parser.add_argument('-t', type=int, help="number of threads to use for BLAST or DIAMOND", default=1)
-    parser.add_argument('-s', type=str, help="search engine to use (blast/diamond). Default = blast", default="blast")
-    parser.add_argument('--skip', type=str, help="skip all time-consuming analyses, and use previously-created output. "
-                                                 "You can use this flag if you want to tweak some of the paramters, "
-                                                 "but avoid all the time-consuming steps (e.g. BLAST, codeml). "
-                                                 "Do not invoke if this module crashed during a previous run", const=True, nargs="?")
-
-
-    args, unknown = parser.parse_known_args()
-
-
-    cwd = os.getcwd()
+    args = common.get_args('dnds')
 
     if not args.skip:
-        os.system("echo ${ctl} > ctl.txt")
-        file = open("ctl.txt")
-        for i in file:
-            ctl = (i.rstrip())
-            ctl = ctl[0:len(ctl)]
-        os.system("rm ctl.txt")
-
-        if not re.findall(r'codeml', ctl):
-            os.system("which pseudofinder.py > mainDir.txt")
-            file = open("mainDir.txt")
-            for i in file:
-                location = i.rstrip()
-            location = allButTheLast(location, "/")
-            ctl = location + "/" + "codeml-2.ctl"
-
-            if not re.findall(r'codeml', ctl):
-                print("\nCannot locate the necessary \ncodeml control file. Please double check that "
-                      "installation\n with the \'setup.sh\' script worked without any errors. If issues \npersist, please "
-                      "report an issue on GitHub\n")
-                raise SystemExit
-
-            else:
-                if args.ctl == "NA":
-                    print("\nCannot locate the necessary \ncodeml control file. Please double check that "
-                          "installation\n with the \'setup.sh\' script worked without any errors. If issues \npersist, please "
-                          "report an issue on GitHub\n")
-                    raise SystemExit
-                else:
-                    ctl = args.ctl
-
+        ctl = os.path.dirname(os.path.dirname(__file__)) + "/codeml-2.ctl"
         faa = args.a
         fna = args.n
 
@@ -487,7 +409,6 @@ def main():
         print(args.out + "/dnds-analysis")
         os.system("mkdir -p " + args.out)
         os.system("mkdir -p " + args.out + "/dnds-analysis")
-
 
         if args.s == "blast":
             print("Running BLAST")
@@ -626,10 +547,6 @@ def main():
             ls = line.split("  ")
             dS = remove(lastItem(ls), [" ", "=", "d", "S"])
             dN = remove(lastItem(ls[0:len(ls) - 1]), [" ", "=", "d", "N"])
-            print(orf)
-            print(dN)
-            print(dS)
-            print("")
             dndsDict[NODE]["orf"] = orf
             dndsDict[NODE]["dn"] = dN
             dndsDict[NODE]["ds"] = dS
@@ -663,7 +580,7 @@ def main():
             dsList.append(float(dndsDict[i]["ds"]))
             dndsList.append(dnds)
 
-            if dnds < args.d:
+            if dnds < args.dnds:
                 pg = "N"
             else:
                 pg = "Y"
@@ -702,37 +619,27 @@ def main():
         print("Thanks for using!")
 
 
-def full(skip: bool, ref: str, nucOrfs: str, pepORFs: str, referenceNucOrfs: str, referencePepOrfs: str, c: str, out: str, search: str, dnds: float, M: int, m: int, threads: int):
+def full(skip: bool, ref: str, nucOrfs: str, pepORFs: str, referenceNucOrfs: str, referencePepOrfs: str, c: str, out: str, search: str, dndsLimit: float, M: int, m: int, threads: int):
     cwd = os.getcwd()
 
-    if skip == False:
+    if skip == True:
+        pass
+    else:
+        os.system("echo ${ctl} > ctl.txt")
+        file = open("ctl.txt")
+        for i in file:
+            ctl = (i.rstrip())
+            ctl = ctl[0:len(ctl)]
+        os.system("rm ctl.txt")
 
-        if not c:
-            os.system("echo ${ctl} > ctl.txt")
-            file = open("ctl.txt")
-            for i in file:
-                ctl = (i.rstrip())
-                ctl = ctl[0:len(ctl)]
-            os.system("rm ctl.txt")
-
-            if not re.findall(r'codeml', ctl):
-
-                os.system("which pseudofinder.py > mainDir.txt")
-                file = open("mainDir.txt")
-                for i in file:
-                    location = i.rstrip()
-
-                location = allButTheLast(location, "/")
-                ctl = location + "/" + "codeml-2.ctl"
-
-                if not re.findall(r'codeml', ctl):
-                    print("\nCannot locate the necessary \ncodeml control file. Please double check that "
-                          "installation\n with the \'setup.sh\' script worked without any errors. If issues \npersist, please "
-                          "report an issue on GitHub\n")
-                    raise SystemExit
-
-        else:
-            ctl = c
+        if not re.findall(r'codeml', ctl):
+            if not c:
+                print("\nCannot locate the necessary \ncodeml control file. Please double check that "
+                      "installation\n with the \'setup.sh\' script worked without any errors. If issues \npersist, please "
+                      "report an issue on GitHub\n")
+                raise SystemExit
+            else:
+                ctl = c
 
         faa = pepORFs
         fna = nucOrfs
@@ -751,17 +658,18 @@ def full(skip: bool, ref: str, nucOrfs: str, pepORFs: str, referenceNucOrfs: str
                 print(
                     "Did not find reference datasets. Please provide these using the \'-ra\' and \'rn\', or \'r\' flag")
 
-        print("Starting pipeline...")
+        print("Starting dN/dS analysis pipeline...")
 
         os.system("mkdir -p " + out)
         os.system("mkdir -p " + out + "/dnds-analysis")
 
         if search == "blast":
             print("Running BLAST")
-            os.system("makeblastdb -dbtype prot -in %s -out %s" % (refFaa, refFaa))
+
+            os.system("makeblastdb -dbtype prot -in %s -out %s > /dev/null 2>&1" % (refFaa, refFaa))
             # os.system("rm makeblastdb.out")
             os.system("blastp -query %s -db %s "
-                      "-outfmt 6 -out %s/pseudogene.blast -evalue 1E-6 -num_threads %s -max_target_seqs 1" % (
+                      "-outfmt 6 -out %s/pseudogene.blast -evalue 1E-6 -num_threads %s -max_target_seqs 1  > /dev/null 2>&1" % (
                           faa, refFaa, out, threads))
 
             os.system("rm %s.psq" % refFaa)
@@ -812,16 +720,16 @@ def full(skip: bool, ref: str, nucOrfs: str, pepORFs: str, referenceNucOrfs: str
                 outAA.close()
 
         # ALIGNING PROTEIN SEQUENCES AND CREATING A CODON ALIGNMENT
-        print("aligning files...")
+        print("Aligning files...")
         DIR = out + "/dnds-analysis"
         os.system("for i in %s/*faa; do"
-                  " muscle -in $i -out $i.aligned.fa;"
+                  " muscle -in $i -out $i.aligned.fa > /dev/null 2>&1;"
                   # " rm muscle.out;"
                   " pal2nal.pl $i.aligned.fa $i.fna -output fasta > $i.codonalign.fa;"
                   " done" % DIR)
 
         # BUILDING CONTROL FILES
-        print("preparing for codeml analysis")
+        print("Preparing for codeml analysis")
         DIR = out + "/dnds-analysis"
         codealign = os.listdir(DIR)
         count = 0
@@ -863,7 +771,8 @@ def full(skip: bool, ref: str, nucOrfs: str, pepORFs: str, referenceNucOrfs: str
                 perc = (count / total) * 100
                 sys.stdout.write("running codeml: %d%%   \r" % (perc))
                 sys.stdout.flush()
-                os.system("codeml %s/dnds-analysis/%s" % (out, file))
+
+                os.system("codeml %s/dnds-analysis/%s > /dev/null 2>&1" % (out, file))
                 # os.system("rm codeml.out")
 
     # PARSING CODEML OUTPUT
@@ -871,7 +780,7 @@ def full(skip: bool, ref: str, nucOrfs: str, pepORFs: str, referenceNucOrfs: str
     cwd = os.getcwd()
     DIR = out + "/dnds-analysis"
 
-    print("summarizing codeml output")
+    print("Summarizing codeml output")
     codealign = os.listdir(DIR)
     dndsDict = defaultdict(lambda: defaultdict(lambda: 'EMPTY'))
     for i in codealign:
@@ -921,7 +830,7 @@ def full(skip: bool, ref: str, nucOrfs: str, pepORFs: str, referenceNucOrfs: str
             dsList.append(float(dndsDict[i]["ds"]))
             dndsList.append(dnds)
 
-            if float(dnds) < float(dnds):
+            if float(dnds) < dndsLimit:
                 pg = "N"
             else:
                 pg = "Y"
