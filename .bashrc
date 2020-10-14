@@ -121,3 +121,4 @@ export PS1="\[$(tput setaf 3)\][\$PWD]\[$(tput sgr0)\]$ "
 
 # adding pseudofinder to path
 export PATH="${PATH}:/home/jovyan/MagicCave:/home/jovyan/pseudo-finder"
+export PATH="${PATH}:/home/jovyan/MagicCave:/home/jovyan/pseudo-finder/bioinf_tools"
