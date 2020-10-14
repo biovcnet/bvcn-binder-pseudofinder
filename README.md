@@ -9,24 +9,29 @@ Part of the [Bioinformatics Virtual Coordination Network](https://biovcnet.githu
 
 ## Walkthrough
 
-COMMAND DESCRIPTION
+Print general help menu
 
-    COMMAND
+    pseudofinder.py help
 
-COMMAND DESCRIPTION
+Print the help menu of the Annotate module
 
-    COMMAND
+    pseudofinder.py annotate -h
 
-COMMAND DESCRIPTION
+Run the Annotate module
 
-    COMMAND
+    pseudofinder.py annotate -g test_data/Mycobacterium_leprae_TN.gbff -db test_data/combined_mycobacteria.faa -op testAnnotate
 
-COMMAND DESCRIPTION
+Print the help menu of the DNDS module
 
-    COMMAND
+    pseudofinder.py dnds -h
 
+Run the Annotate module
 
+    pseudofinder.py dnds
 
+Run the Annotate module, along with the DNDS module
+
+    pseudofinder.py annotate
 
 
 
